@@ -1,6 +1,8 @@
-(require 'image-roll)
-(require 'memory-report)
+;; -*- lexical-binding: t; -*-
 
+(require 'image-roll)
+(require 'memory-report) ;; not used yet, but could be handy for 'managing' the
+                         ;; cache
 
 (defvar-local papyrus-svg-embed nil)
 
@@ -75,6 +77,7 @@ This function is used for the image-roll-demo."
         (overlay-put o 'display (svg-image svg :margin `(0 . ,image-roll-vertical-margin)))
       (overlay-put o 'display image))))
 
+;;;###autoload
 (define-derived-mode papyrus-mode special-mode "Papyrus"
   (let ((inhibit-read-only t))
    (erase-buffer))
@@ -111,3 +114,7 @@ This function is used for the image-roll-demo."
                                             (reverse index))))
 
     (funcall doc-view--djvu-push-bookmarks bookmarks)))
+
+(add-to-list 'auto-mode-alist '("\\.djvu\\'" . papyrus-mode))
+
+(provide 'papyrus)
