@@ -51,6 +51,14 @@ This function is used for the image-roll-demo."
          (image-file (format "/tmp/pp%s-%s.tiff" page (round w))) ;TODO fix file names
          image)
     (unless w (print "NO W" #'external-debugging-output))
+    (run-with-idle-timer 0 nil
+                         (lambda (file page)
+                           (let* ((props (alist-get page papyrus-cache))
+                                  (im (when (eq (car props) w)
+                                        (cadr props))))
+                             (unless im
+                               (papyrus-pre-cache file page))))
+                         (buffer-file-name) (1+ page))
     (let* ((props (alist-get page papyrus-cache))
            (im (when (eq (car props) w)
                  (cadr props))))
@@ -94,6 +102,25 @@ This function is used for the image-roll-demo."
               imenu-default-goto-function (lambda (_name position &rest _rest)
                                             (image-roll-goto-page position))))
 
+;;; Cache
+(defun papyrus-pre-cache (file-path page)
+  (let* ((o (image-roll-page-overlay page))
+         (s (cdr (overlay-get o 'display)))
+         (w (car (plist-get s :width)))
+         (image-file (format "/tmp/pp%s-%s.tiff" page (round w))) ;TODO fix file names
+         (proc (start-process-shell-command "ddjvu"
+                                       nil
+                                       (format "ddjvu -format=tiff -page=%s -size=%sx%s -quality=80 '%s' '%s'"
+                                               page
+                                               w
+                                               50000 ;; maximum height of image
+                                               file-path
+                                               image-file)))
+         (image (setq image (create-image image-file nil nil :margin `(0 . ,image-roll-vertical-margin)))))
+    (set-process-sentinel proc (lambda (proc event)
+                                 (push (list page w image) papyrus-cache)))))
+
+;;; Imenu
 (defun papyrus--imenu-create-index ()
   (letrec ((filename (buffer-file-name))
            (bookmarks (with-temp-buffer
