@@ -16,6 +16,8 @@ The purpose of this library is to 're-implement' doc-view in a sensible way, tha
 - write a modular package, with a package core file, and have separate files (or
   sections) for the implementation of each backend
 
-Functionality should get ported from [[https://github.com/vedang/pdf-tools][pdf-tools]] and /doc-view/.
+Functionalities should get ported from [[https://github.com/vedang/pdf-tools][pdf-tools]] and /doc-view/.
 
 *Currently only a simple, but well working, djvu backend has been implemented*
+
+*This package requires the [[https://github.com/dalanicolai/image-roll.el/tree/papyrus-version][papyrus-version branch of the image roll package]]*

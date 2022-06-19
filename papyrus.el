@@ -39,7 +39,17 @@ are used to control the rendered page sizes."
                       (round (* scaling-factor (cdr s))))))
             doc-page-sizes)))
 
-(defun papyrus-display-page (page)
+(defun papyrus-djvu-text-contents (&optional detail page)
+  (read (concat (unless page "(")
+                (shell-command-to-string
+                 (concat  "djvutxt "
+                          (when detail (format "--detail=%s " detail))
+                          (when page (format "--page=%s " page))
+                          (format "\"%s\"" (buffer-file-name))))
+                (unless page ")"))))
+
+
+(defun papyrus-display-page (page &optional force)
   "Return demo image of page.
 This function is used for the image-roll-demo."
   (let* ((o (image-roll-page-overlay page))
@@ -93,14 +103,18 @@ This function is used for the image-roll-demo."
    (setq cursor-type nil)
    (setq image-roll-step-size 50)
 
-  (setq-local image-roll-page-sizes-function #'papyrus-djvu-desired-page-sizes
-              image-roll-last-page (papyrus-djvu-length)
-              image-roll-display-page-function #'papyrus-display-page
-              image-roll-center t
+   (setq-local image-roll-page-sizes-function #'papyrus-djvu-desired-page-sizes ;this could be a variable directly
+               image-roll-text-contents (papyrus-djvu-text-contents 'page)
+               image-roll-last-page (length image-roll-text-contents)
+               image-roll-display-page-function #'papyrus-display-page
+               image-roll-center t
 
-              imenu-create-index-function #'papyrus--imenu-create-index
-              imenu-default-goto-function (lambda (_name position &rest _rest)
-                                            (image-roll-goto-page position))))
+               imenu-create-index-function #'papyrus--imenu-create-index
+               imenu-default-goto-function (lambda (_name position &rest _rest)
+                                             (image-roll-goto-page position))))
+
+;; isearch-search-fun-function #'papyrus-djvu-isearch-search-function))
+;; (add-hook 'isearch-mode-hook #'papyrus-djvu-configure-isearch nil t))
 
 ;;; Cache
 (defun papyrus-pre-cache (file-path page)
@@ -144,4 +158,22 @@ This function is used for the image-roll-demo."
 
 (add-to-list 'auto-mode-alist '("\\.djvu\\'" . papyrus-mode))
 
+;;; Search
+
+(defun papyrus--search-candidates ()
+  (let ((p 0))
+    (mapcan (lambda (page)
+              (setq p (1+ p))
+              (mapcar (lambda (l)
+                        (cons (concat (number-to-string p) " " (nth 5 l))
+                              (cl-subseq l 1 5)))
+                      (nthcdr 5 page)))
+            (papyrus-djvu-text-contents 'line))))
+
+(defun papyrus-swiper ()
+  (interactive)
+  (ivy-read "Select line: "
+            (papyrus--search-candidates)
+            :action (lambda (c) (image-roll-goto-page
+                                 (string-to-number (car (print c)))))))
 (provide 'papyrus)
