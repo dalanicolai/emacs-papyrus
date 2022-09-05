@@ -244,16 +244,6 @@ are used to control the rendered page sizes."
 ;;               (nthcdr 5 hidden-text-list)))))
 
 ;; TODO move to djvu.el
-(defun papyrus-structural-filter (fn hidden-text-list &optional format-fn)
-  (let (elements)
-    (named-let recur ((text hidden-text-list))
-      (if (funcall fn text)
-          (push (if format-fn (funcall format-fn text) text)
-                elements)
-        (unless (stringp (nth 5 text))
-          (mapcar (lambda (e) (recur e))
-                  (nthcdr 5 text)))))
-    (nreverse elements)))
 
 ;; TODO this function should replace `papyrus--djvu-get-matches'
 (defun papyrus--djvu-get-matches (pattern contents)
@@ -263,6 +253,12 @@ are used to control the rendered page sizes."
           (string-match pattern (nth 5 e))))
    contents))
 
+;; (papyrus-structural-filter
+;;    (lambda (e)
+;;      (and (eq (car e) 'word)
+;;           (string-match "terecht" (nth 5 e))))
+;;  test)
+
 ;; (defun papyrus-djvu-elements (contents types &optional fn)
 ;;   (mapcan (lambda (s)
 ;;             (if (member (car s) types)
@@ -271,14 +267,6 @@ are used to control the rendered page sizes."
 ;;                   (list s))
 ;;               (papyrus-djvu-elements s types fn)))
 ;;           (nthcdr 5 contents)))
-
-;; (defun papyrus--djvu-get-matches (pattern contents)
-;;   (if (stringp (nth 5 contents))
-;;       (string-match pattern (nth 5 contents))
-;;     (papyrus-djvu-elements contents '(word)
-;;                            (lambda (w)
-;;                              (when (string-match pattern (nth 5 w))
-;;                                w)))))
 
 ;; (defun papyrus--listify-search-candidates ()
 ;;   (let ((i 0))
