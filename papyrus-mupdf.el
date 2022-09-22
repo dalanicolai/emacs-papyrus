@@ -18,9 +18,9 @@
 
                imenu-create-index-function #'papyrus-mupdf--imenu-create-index
                imenu-default-goto-function (lambda (_name position &rest _rest)
-                                             ;; NOTE VERY WEIRD, the first
-                                             ;; result is a number, while the
-                                             ;; other results are markers
+                                             ;; NOTE WEIRD, the first result is
+                                             ;; a number, while the other
+                                             ;; results are markers
                                              (scrap-goto-page (if (markerp position)
                                                                   (marker-position position)
                                                                 position)))))
